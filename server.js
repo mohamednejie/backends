@@ -1,23 +1,22 @@
   const express = require("express");
+  const mongoose=require('mongoose')
   const cors = require("cors");
   const dbConfig = require("./app/config/db.config");
   const routebibliotécaire = require('./app/routes/bibliotécaire.router');
-   const routeevenement = require('./app/routes/evenement.router');
+const routeevenement = require('./app/routes/evenement.router');
 const routeformation = require('./app/routes/formation.router');
 const routerreunion= require('./app/routes/reunion.router');
 const routerressource=require('./app/routes/ressourcepedagoghique.router')
   const session = require('express-session');
-
+const multer =require('multer')
   const app = express();
+
   app.use(cors());
 
   app.use(express.json());
 
 
   app.use(express.urlencoded({ extended: true }));
-     
-  
-
   
   
   
@@ -29,7 +28,6 @@ const routerressource=require('./app/routes/ressourcepedagoghique.router')
   app.use('/api', routeformation);
   app.use('/api',routerreunion);
   app.use('/api',routerressource)
-
 
 
   app.use(session({
@@ -58,7 +56,6 @@ const routerressource=require('./app/routes/ressourcepedagoghique.router')
   });
   
   
-
   const PORT = process.env.PORT || 8080;
   app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}.`);
@@ -83,59 +80,6 @@ const routerressource=require('./app/routes/ressourcepedagoghique.router')
     });
 
 
-
-
-
-
-  //   function initial() {
-  //     Role.estimatedDocumentCount((err, count) => {
-  //       if (!err && count === 0) {
-  //         new Role({
-  //           name: "etudiant"
-  //         }).save(err => {
-  //           if (err) {
-  //             console.log("error", err);
-  //           }
-    
-  //           console.log("added 'etudiant' to roles collection");
-  //         });
-    
-  //         new Role({
-  //           name: "modScolarite"
-  //         }).save(err => {
-  //           if (err) {
-  //             console.log("error", err);
-  //           }
-    
-  //           console.log("added 'scolarite' to roles collection");
-  //         });
-
-  //         new Role({
-  //             name: "prof"
-  //           }).save(err => {
-  //             if (err) {
-  //               console.log("error", err);
-  //             }
-      
-  //             console.log("added 'prof' to roles collection");
-  //           });
-    
-  //         new Role({
-  //           name: "admin"
-  //         }).save(err => {
-  //           if (err) {
-  //             console.log("error", err);
-  //           }
-    
-  //           console.log("added 'admin' to roles collection");
-  //         });
-  //       }
-  //     });
-  //   }
-
-
-    ///roles
-
   async function initial() {
       try {
           let count = await Role.estimatedDocumentCount();
@@ -150,12 +94,4 @@ const routerressource=require('./app/routes/ressourcepedagoghique.router')
       }
   }
 
-  async function addRole(roleName) {
-      try {
-          const role = new Role({ name: roleName });
-          await role.save();
-          console.log(`added '${roleName}' to roles collection`);
-      } catch (err) {
-          console.error(`Error adding role ${roleName}: `, err);
-      }
-  }
+  

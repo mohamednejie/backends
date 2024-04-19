@@ -8,7 +8,7 @@ const controllerevenement = require('../controllers/evenement.controller');
 
 // Routes pour les événements
 router.get('/getevent', controllerevenement.getAllevenement);
-router.put('/updateevent/:id', controllerevenement.updateevenement);
+router.put('/updateevent/:id',upload.single('file'), controllerevenement.updateevenement);
 router.delete('/deleteevent/:id', controllerevenement.deleteevenement);
 router.get('/getoneevenent/:id',controllerevenement.getOneEvenement);
 router.post('/participatevent/:eventId/:userId', controllerevenement.participate);

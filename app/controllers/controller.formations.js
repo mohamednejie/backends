@@ -10,7 +10,17 @@ const formationValidationSchema = Joi.object({
     description: Joi.string().required(),
     date_debut: Joi.date().required(),
     date_fin: Joi.date().required(),
-    
+}).custom((value, helpers) => {
+    // Vérifie si la date de début est inférieure à la date de fin
+    if (new Date(value.date_debut) >= new Date(value.date_fin)) {
+        return helpers.error('La date de début doit être antérieure à la date de fin');
+    }
+    // Vérifie si la date de début et la date de fin sont supérieures à la date actuelle
+    const currentDate = new Date();
+    if (new Date(value.date_debut) <= currentDate || new Date(value.date_fin) <= currentDate) {
+        return helpers.error('Les dates doivent être postérieures à la date actuelle');
+    }
+    return value;
 });
 
 const creatformation = async (req, res) => {
@@ -30,7 +40,65 @@ const creatformation = async (req, res) => {
     }
 };
 
-// READ: Obtenir toutes les formations
+const updateFormation = async (req, res) => {
+    try {
+        // Récupérer l'ID de la formation à mettre à jour depuis les paramètres de requête
+        const { id } = req.params;
+
+        // Vérifier si la formation existe dans la base de données
+        const existingFormation = await Formation.findById(id);
+        if (!existingFormation) {
+            return res.status(404).json({ error: "La formation n'existe pas" });
+        }
+
+        // Valider les données de la formation à mettre à jour
+        const { titre, description, date_debut, date_fin } = req.body;
+
+        // Valider le titre
+        if (!titre || titre.trim() === '') {
+            return res.status(400).json({ error: "Le titre de la formation est requis" });
+        }
+
+        // Valider la description
+        if (!description || description.trim() === '') {
+            return res.status(400).json({ error: "La description de la formation est requise" });
+        }
+
+        // Valider les dates de début et de fin
+        const currentDate = new Date();
+        const startDate = new Date(date_debut);
+        const endDate = new Date(date_fin);
+
+        if (startDate <= currentDate || endDate <= currentDate) {
+            return res.status(400).json({ error: "Les dates doivent être postérieures à la date actuelle" });
+        }
+
+        if (startDate >= endDate) {
+            return res.status(400).json({ error: "La date de début doit être antérieure à la date de fin" });
+        }
+
+        // Mettre à jour les champs modifiables de la formation
+        existingFormation.titre = titre;
+        existingFormation.description = description;
+        existingFormation.date_debut = startDate;
+        existingFormation.date_fin = endDate;
+
+        // Enregistrer les modifications de la formation dans la base de données
+        await existingFormation.save();
+
+        // Envoyer un email pour notifier la mise à jour de la formation
+        await sendEmailForUpdatedFormation(existingFormation);
+
+        // Retourner la formation mise à jour
+        return res.json(existingFormation);
+
+    } catch (err) {
+        // En cas d'erreur, renvoyer une réponse avec le message d'erreur
+        return res.status(500).json({ error: err.message });
+    }
+};
+
+
 const getAllFormations = async (req, res) => {
     try {
         const formations = await Formation.find();
@@ -40,20 +108,8 @@ const getAllFormations = async (req, res) => {
     }
 };
 
-// UPDATE: Mettre à jour une formation existante
-const updateFormation = async (req, res) => {
-    try {
-        const updatedFormation = await Formation.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        
-        await sendEmailForUpdatedFormation(updatedFormation);
-        res.json({ message: 'Formation modifié avec succès.' });
 
-    } catch (err) {
-        res.status(400).json({ message: err.message });
-    }
-};
 
-// DELETE: Supprimer une formation existante
 const deleteFormation = async (req, res) => {
     try {
         // Recherche de la formation à supprimer pour obtenir ses détails avant la suppression
